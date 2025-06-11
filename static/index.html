@@ -288,7 +288,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🧠 FreshAgentLab</h1>
+            <h1>🧠 AgentLab</h1>
             <p>AI-Powered Multi-Agent Idea Generation & Validation Platform</p>
         </div>
 
@@ -600,28 +600,64 @@
             const panel = document.createElement('div');
             panel.className = 'prd-panel';
             
+            // Extract executive summary content
+            const execSummary = prdDocument.executive_summary?.executive_summary || prdDocument.executive_summary;
+            const vision = execSummary?.product_vision?.vision_statement || execSummary?.vision || 'Comprehensive product vision and strategy';
+            
+            // Extract core features from the correct nested structure
+            const coreFeatures = prdDocument.functional_requirements?.functional_requirements?.core_features?.features || 
+                                prdDocument.functional_requirements?.core_features || [];
+            
             panel.innerHTML = `
                 <h3>${prdDocument.product_name}</h3>
+                
                 <div style="margin: 20px 0;">
-                    <strong>Executive Summary:</strong>
-                    <p>${prdDocument.executive_summary?.vision || 'Comprehensive product vision and strategy'}</p>
+                    <strong>🎯 Executive Summary:</strong>
+                    <p>${vision}</p>
                 </div>
+                
                 <div style="margin: 20px 0;">
-                    <strong>Key Features:</strong>
+                    <strong>📋 Core Features:</strong>
                     <ul>
-                        ${(prdDocument.functional_requirements?.core_features || []).map(feature => 
+                        ${coreFeatures.map(feature => 
                             `<li><strong>${feature.name}:</strong> ${feature.description}</li>`
+                        ).join('') || '<li>Feature details will be populated based on validation results</li>'}
+                    </ul>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <strong>🏗️ Technical Architecture:</strong>
+                    <ul>
+                        <li><strong>Backend:</strong> ${(prdDocument.technical_requirements?.technology_stack?.backend || []).join(', ')}</li>
+                        <li><strong>Frontend:</strong> ${(prdDocument.technical_requirements?.technology_stack?.frontend || []).join(', ')}</li>
+                        <li><strong>Database:</strong> ${(prdDocument.technical_requirements?.technology_stack?.database || []).join(', ')}</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <strong>⏱️ Timeline:</strong> ${prdDocument.timeline?.estimated_timeline || '6 months to launch'}
+                    <ul>
+                        ${(prdDocument.timeline?.project_phases || []).map(phase => 
+                            `<li><strong>${phase.phase}:</strong> ${phase.duration} - ${phase.deliverables?.join(', ')}</li>`
                         ).join('')}
                     </ul>
                 </div>
+                
                 <div style="margin: 20px 0;">
-                    <strong>Timeline:</strong> ${prdDocument.timeline?.estimated_timeline || '6 months to launch'}
-                </div>
-                <div style="margin: 20px 0;">
-                    <strong>Success Metrics:</strong>
+                    <strong>📊 Success Metrics:</strong>
                     <ul>
-                        <li>User Acquisition: ${prdDocument.success_metrics?.key_metrics?.user_metrics?.monthly_active_users || '10,000+ MAU'}</li>
-                        <li>Revenue Target: ${prdDocument.success_metrics?.key_metrics?.business_metrics?.revenue || '$50K MRR'}</li>
+                        <li><strong>User Acquisition:</strong> ${prdDocument.success_metrics?.key_metrics?.user_metrics?.monthly_active_users || '10,000+ MAU'}</li>
+                        <li><strong>Revenue Target:</strong> ${prdDocument.success_metrics?.key_metrics?.business_metrics?.revenue || '$50K MRR'}</li>
+                        <li><strong>User Retention:</strong> ${prdDocument.success_metrics?.key_metrics?.user_metrics?.user_retention || '80% 30-day retention'}</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <strong>⚠️ Risk Assessment:</strong>
+                    <ul>
+                        ${(prdDocument.risk_assessment?.identified_risks || []).map(risk => 
+                            `<li><strong>${risk.risk}:</strong> ${risk.probability} probability, ${risk.impact} impact</li>`
+                        ).join('')}
                     </ul>
                 </div>
             `;
