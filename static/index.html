@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshAgentLab - Multi-Agent Idea Generation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 30px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .workflow-progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e1e5e9;
+        }
+
+        .progress-step.completed::after {
+            background: #4caf50;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .step-circle.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-circle.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .ideas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .idea-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .idea-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .idea-card.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .idea-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .idea-concept {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .idea-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .meta-item {
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .validation-panel,
+        .prd-panel {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .score-display {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            color: white;
+            margin: 10px 0;
+        }
+
+        .score-high { background: #4caf50; }
+        .score-medium { background: #ff9800; }
+        .score-low { background: #f44336; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 FreshAgentLab</h1>
+            <p>AI-Powered Multi-Agent Idea Generation & Validation Platform</p>
+        </div>
+
+        <div class="main-panel">
+            <div class="input-section">
+                <label for="ideaPrompt">Describe your challenge or domain for idea generation:</label>
+                <textarea id="ideaPrompt" placeholder="Example: I want to create a mobile app that helps people learn new languages more effectively..."></textarea>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="ideaType">Idea Type:</label>
+                    <select id="ideaType">
+                        <option value="creative">Creative Ideas</option>
+                        <option value="business">Business Ideas</option>
+                        <option value="product">Product Ideas</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="numIdeas">Number of Ideas:</label>
+                    <input type="number" id="numIdeas" value="5" min="1" max="10">
+                </div>
+
+                <div class="control-group">
+                    <label for="workflowType">Workflow:</label>
+                    <select id="workflowType">
+                        <option value="full_pipeline">Full Pipeline (Ideas → Validation → PRD)</option>
+                        <option value="idea_generation">Ideas Only</option>
+                        <option value="validation_only">Validation Only</option>
+                    </select>
+                </div>
+
+                <button class="btn" id="generateBtn" onclick="startWorkflow()">
+                    🚀 Generate Ideas
+                </button>
+            </div>
+
+            <div id="status" class="status hidden"></div>
+
+            <div id="workflowProgress" class="workflow-progress hidden">
+                <div class="progress-step" id="step-ideas">
+                    <div class="step-circle">1</div>
+                    <span>Idea Generation</span>
+                </div>
+                <div class="progress-step" id="step-validation">
+                    <div class="step-circle">2</div>
+                    <span>Validation</span>
+                </div>
+                <div class="progress-step" id="step-prd">
+                    <div class="step-circle">3</div>
+                    <span>PRD Creation</span>
+                </div>
+            </div>
+
+            <div id="resultsSection" class="results-section">
+                <div id="ideasContainer"></div>
+                <div id="validationContainer"></div>
+                <div id="prdContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let currentWorkflow = null;
+
+        async function startWorkflow() {
+            const prompt = document.getElementById('ideaPrompt').value.trim();
+            if (!prompt) {
+                showStatus('Please enter a prompt for idea generation.', 'error');
+                return;
+            }
+
+            const workflowType = document.getElementById('workflowType').value;
+            const ideaType = document.getElementById('ideaType').value;
+            const numIdeas = parseInt(document.getElementById('numIdeas').value);
+
+            // Reset UI
+            resetUI();
+            showStatus('Starting AI-powered idea generation...', 'loading');
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                if (workflowType === 'full_pipeline') {
+                    await executeFullPipeline(prompt, ideaType, numIdeas);
+                } else if (workflowType === 'idea_generation') {
+                    await generateIdeasOnly(prompt, ideaType, numIdeas);
+                } else if (workflowType === 'validation_only') {
+                    showStatus('Please generate ideas first before validation.', 'error');
+                    return;
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        async function generateIdeasOnly(prompt, ideaType, numIdeas) {
+            showProgress('ideas');
+            
+            const response = await fetch('/api/generate-ideas', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    prompt: prompt,
+                    num_ideas: numIdeas,
+                    context: { idea_type: ideaType }
+                })
+            });
+
+            const result = await response.json();
+            if (result.ideas) {
+                currentSession = result.session_id;
+                displayIdeas(result.ideas);
+                showStatus('Ideas generated successfully!', 'success');
+                completeStep('ideas');
+            } else {
+                throw new Error('Failed to generate ideas');
+            }
+        }
+
+        async function executeFullPipeline(prompt, ideaType, numIdeas) {
+            // Step 1: Generate Ideas
+            showProgress('ideas');
+            await generateIdeasOnly(prompt, ideaType, numIdeas);
+            
+            // Step 2: Auto-validate top ideas
+            showProgress('validation');
+            showStatus('Validating generated ideas...', 'loading');
+            
+            // Get ideas from the displayed cards
+            const ideaCards = document.querySelectorAll('.idea-card');
+            const ideas = Array.from(ideaCards).slice(0, 3).map(card => ({
+                title: card.querySelector('.idea-title').textContent,
+                concept: card.querySelector('.idea-concept').textContent,
+                // Add other properties as needed
+            }));
+
+            const validationResults = [];
+            for (const idea of ideas) {
+                try {
+                    const response = await fetch('/api/validate-idea', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            idea: idea,
+                            session_id: currentSession
+                        })
+                    });
+                    const result = await response.json();
+                    validationResults.push({ idea, validation: result });
+                } catch (error) {
+                    console.error('Validation error:', error);
+                }
+            }
+
+            if (validationResults.length > 0) {
+                displayValidation(validationResults);
+                completeStep('validation');
+                
+                // Step 3: Create PRD for best idea
+                showProgress('prd');
+                showStatus('Creating Product Requirements Document...', 'loading');
+                
+                const bestIdea = validationResults.sort((a, b) => 
+                    (b.validation.validation_results?.overall_score || 0) - 
+                    (a.validation.validation_results?.overall_score || 0)
+                )[0];
+
+                const prdResponse = await fetch('/api/create-prd', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        idea: bestIdea.idea,
+                        validation_data: bestIdea.validation.validation_results,
+                        session_id: currentSession
+                    })
+                });
+
+                const prdResult = await prdResponse.json();
+                if (prdResult.prd_document) {
+                    displayPRD(prdResult.prd_document);
+                    completeStep('prd');
+                    showStatus('Full pipeline completed successfully!', 'success');
+                }
+            }
+        }
+
+        function resetUI() {
+            document.getElementById('resultsSection').classList.remove('active');
+            document.getElementById('workflowProgress').classList.add('hidden');
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('completed', 'active');
+                step.querySelector('.step-circle').classList.remove('completed', 'active');
+            });
+        }
+
+        function showProgress(currentStep) {
+            document.getElementById('workflowProgress').classList.remove('hidden');
+            
+            const steps = ['ideas', 'validation', 'prd'];
+            const currentIndex = steps.indexOf(currentStep);
+            
+            steps.forEach((step, index) => {
+                const stepElement = document.getElementById(`step-${step}`);
+                const circle = stepElement.querySelector('.step-circle');
+                
+                if (index < currentIndex) {
+                    stepElement.classList.add('completed');
+                    circle.classList.add('completed');
+                    circle.textContent = '✓';
+                } else if (index === currentIndex) {
+                    stepElement.classList.add('active');
+                    circle.classList.add('active');
+                } else {
+                    stepElement.classList.remove('completed', 'active');
+                    circle.classList.remove('completed', 'active');
+                    circle.textContent = index + 1;
+                }
+            });
+        }
+
+        function completeStep(step) {
+            const stepElement = document.getElementById(`step-${step}`);
+            const circle = stepElement.querySelector('.step-circle');
+            stepElement.classList.add('completed');
+            stepElement.classList.remove('active');
+            circle.classList.add('completed');
+            circle.classList.remove('active');
+            circle.textContent = '✓';
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.classList.remove('hidden');
+        }
+
+        function displayIdeas(ideas) {
+            const container = document.getElementById('ideasContainer');
+            container.innerHTML = '<h2>💡 Generated Ideas</h2>';
+            
+            const grid = document.createElement('div');
+            grid.className = 'ideas-grid';
+            
+            ideas.forEach((idea, index) => {
+                const card = document.createElement('div');
+                card.className = 'idea-card';
+                
+                // Handle different possible field names from the API
+                const title = idea.title || idea.business_name || idea.product_name || idea.name || `Idea ${index + 1}`;
+                const description = idea.concept || idea.description || idea.summary || 'No description available';
+                const innovation = idea.innovationLevel || idea.innovation_level || idea.innovation || idea.scalability || 'N/A';
+                const difficulty = idea.implementationDifficulty || idea.implementation_difficulty || idea.difficulty || idea.startup_costs || 'N/A';
+                
+                card.innerHTML = `
+                    <div class="idea-title">${title}</div>
+                    <div class="idea-concept">${description}</div>
+                    <div class="idea-meta">
+                        <div class="meta-item">Innovation: ${innovation}/10</div>
+                        <div class="meta-item">Difficulty: ${difficulty}/10</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            container.appendChild(grid);
+            document.getElementById('resultsSection').classList.add('active');
+        }
+
+        function displayValidation(validationResults) {
+            const container = document.getElementById('validationContainer');
+            container.innerHTML = '<h2>🔍 Validation Results</h2>';
+            
+            validationResults.forEach((result, index) => {
+                const panel = document.createElement('div');
+                panel.className = 'validation-panel';
+                
+                const score = result.validation.validation_results?.overall_score || 0;
+                const scoreClass = score >= 7 ? 'score-high' : score >= 5 ? 'score-medium' : 'score-low';
+                
+                panel.innerHTML = `
+                    <h3>${result.idea.title}</h3>
+                    <div class="score-display ${scoreClass}">
+                        Overall Score: ${score.toFixed(1)}/10
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>Market Analysis:</strong> ${JSON.stringify(result.validation.validation_results?.market_analysis?.key_insights || ['Analysis completed'])}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Recommendations:</strong>
+                        <ul>
+                            ${(result.validation.validation_results?.recommendations || ['Further analysis recommended']).map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+                container.appendChild(panel);
+            });
+        }
+
+        function displayPRD(prdDocument) {
+            const container = document.getElementById('prdContainer');
+            container.innerHTML = '<h2>📋 Product Requirements Document</h2>';
+            
+            const panel = document.createElement('div');
+            panel.className = 'prd-panel';
+            
+            panel.innerHTML = `
+                <h3>${prdDocument.product_name}</h3>
+                <div style="margin: 20px 0;">
+                    <strong>Executive Summary:</strong>
+                    <p>${prdDocument.executive_summary?.vision || 'Comprehensive product vision and strategy'}</p>
+                </div>
+                <div style="margin: 20px 0;">
+                    <strong>Key Features:</strong>
+                    <ul>
+                        ${(prdDocument.functional_requirements?.core_features || []).map(feature => 
+                            `<li><strong>${feature.name}:</strong> ${feature.description}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                <div style="margin: 20px 0;">
+                    <strong>Timeline:</strong> ${prdDocument.timeline?.estimated_timeline || '6 months to launch'}
+                </div>
+                <div style="margin: 20px 0;">
+                    <strong>Success Metrics:</strong>
+                    <ul>
+                        <li>User Acquisition: ${prdDocument.success_metrics?.key_metrics?.user_metrics?.monthly_active_users || '10,000+ MAU'}</li>
+                        <li>Revenue Target: ${prdDocument.success_metrics?.key_metrics?.business_metrics?.revenue || '$50K MRR'}</li>
+                    </ul>
+                </div>
+            `;
+            
+            container.appendChild(panel);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('ideaPrompt').focus();
+        });
+    </script>
+</body>
+</html>
