@@ -1,6 +1,4 @@
-import asyncio
 import uuid
-import json
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from .base_agent import BaseAgent
@@ -8,15 +6,16 @@ from .idea_coach import IdeaCoachAgent
 from .validation import ValidationAgent
 from .product_manager import ProductManagerAgent
 
+
 class OrchestratorAgent(BaseAgent):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, "orchestrator")
-        
+
         # Initialize sub-agents
         self.idea_coach = IdeaCoachAgent(config)
         self.validator = ValidationAgent(config)
         self.product_manager = ProductManagerAgent(config)
-        
+
         # Session management
         self.active_sessions = {}
         self.workflow_templates = {
@@ -35,18 +34,18 @@ class OrchestratorAgent(BaseAgent):
                 {"agent": "product_manager", "task": "create_prd"}
             ]
         }
-    
+
     async def execute_task(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
         self.update_status("processing", "Orchestrating multi-agent workflow")
         start_time = datetime.now()
-        
+
         try:
             workflow_type = task_data.get("workflow_type", "full_pipeline")
             session_id = task_data.get("session_id") or str(uuid.uuid4())
-            
+
             # Initialize session
             session = self._create_session(session_id, task_data)
-            
+
             # Execute workflow
             workflow_result = await self._execute_workflow(workflow_type, task_data, session)
             

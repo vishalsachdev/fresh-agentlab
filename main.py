@@ -1,21 +1,22 @@
+import uvicorn
+import yaml
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import uvicorn
-import yaml
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 from agents.orchestrator import OrchestratorAgent
 from agents.idea_coach import IdeaCoachAgent
 from agents.validation import ValidationAgent
 from agents.product_manager import ProductManagerAgent
-from models.schemas import IdeaRequest, IdeaResponse, ValidationRequest, PRDRequest
+from models.schemas import (
+    IdeaRequest, IdeaResponse, ValidationRequest, PRDRequest
+)
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI(title="FreshAgentLab", version="1.0.0")
 
@@ -35,6 +36,7 @@ idea_coach = IdeaCoachAgent(config)
 validator = ValidationAgent(config)
 product_manager = ProductManagerAgent(config)
 
+
 @app.post("/api/generate-ideas", response_model=IdeaResponse)
 async def generate_ideas(request: IdeaRequest):
     try:
@@ -42,16 +44,21 @@ async def generate_ideas(request: IdeaRequest):
         idea_type = "creative"
         if request.context and "idea_type" in request.context:
             idea_type = request.context["idea_type"]
-            
-        result = await orchestrator.generate_ideas(request.prompt, request.num_ideas, idea_type)
-        
+
+        result = await orchestrator.generate_ideas(
+            request.prompt, request.num_ideas, idea_type
+        )
+
         # Extract the workflow result to get the actual ideas
-        if "workflow_result" in result and "steps" in result["workflow_result"]:
+        if (
+            "workflow_result" in result
+            and "steps" in result["workflow_result"]
+        ):
             for step in result["workflow_result"]["steps"]:
                 if step.get("agent") == "idea_coach" and "result" in step:
                     step_result = step["result"]
                     ideas = step_result.get("ideas", [])
-                    
+
                     # Handle multiple levels of nesting
                     if ideas and len(ideas) > 0:
                         first_item = ideas[0]
@@ -69,30 +76,42 @@ async def generate_ideas(request: IdeaRequest):
                             actual_ideas = ideas
                     else:
                         actual_ideas = []
-                    
-                    return IdeaResponse(ideas=actual_ideas, session_id=result["session_id"])
-        
+
+                    return IdeaResponse(
+                        ideas=actual_ideas, session_id=result["session_id"]
+                    )
+
         # Fallback if structure is different
-        return IdeaResponse(ideas=result.get("ideas", []), session_id=result.get("session_id", "unknown"))
-        
+        return IdeaResponse(
+            ideas=result.get("ideas", []),
+            session_id=result.get("session_id", "unknown")
+        )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/validate-idea")
 async def validate_idea(request: ValidationRequest):
     try:
-        result = await validator.validate_idea(request.idea, request.session_id)
+        result = await validator.validate_idea(
+            request.idea, request.session_id
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/create-prd")
 async def create_prd(request: PRDRequest):
     try:
-        result = await product_manager.create_prd(request.idea, request.validation_data, request.session_id)
+        result = await product_manager.create_prd(
+            request.idea, request.validation_data, request.session_id
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/status")
 async def get_status():
@@ -105,6 +124,7 @@ async def get_status():
             "product_manager": product_manager.get_status()
         }
     }
+
 
 @app.get("/")
 async def serve_frontend():
