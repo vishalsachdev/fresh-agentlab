@@ -283,6 +283,87 @@
         .score-low { background: #f44336; }
 
         .hidden { display: none; }
+
+        .example-prompts {
+            margin-top: 15px;
+        }
+
+        .example-prompts label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .prompt-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prompt-tag {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ebff 100%);
+            border: 1px solid #d1d9ff;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .prompt-tag:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .agent-status {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .agent-status.active {
+            display: block;
+        }
+
+        .agent-status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .agent-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .agent-status-text {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .agent-activity {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -295,7 +376,19 @@
         <div class="main-panel">
             <div class="input-section">
                 <label for="ideaPrompt">Describe your challenge or domain for idea generation:</label>
-                <textarea id="ideaPrompt" placeholder="Example: I want to create a mobile app that helps people learn new languages more effectively..."></textarea>
+                <textarea id="ideaPrompt" placeholder="Describe your challenge or click an example below..."></textarea>
+                
+                <div class="example-prompts">
+                    <label>💡 Try these examples:</label>
+                    <div class="prompt-tags">
+                        <span class="prompt-tag" onclick="setPrompt('Help students track assignments across different courses and manage deadlines effectively')">📚 Student Assignment Tracker</span>
+                        <span class="prompt-tag" onclick="setPrompt('Create a mobile app that helps people learn new languages through daily micro-lessons')">🌍 Language Learning App</span>
+                        <span class="prompt-tag" onclick="setPrompt('Build a platform that connects local businesses with freelance developers for small projects')">💼 Freelancer Marketplace</span>
+                        <span class="prompt-tag" onclick="setPrompt('Design a tool that helps remote teams collaborate more effectively on creative projects')">🤝 Remote Team Collaboration</span>
+                        <span class="prompt-tag" onclick="setPrompt('Develop a wellness app that tracks mental health and provides personalized recommendations')">🧘 Mental Health Tracker</span>
+                        <span class="prompt-tag" onclick="setPrompt('Create a sustainable living platform that helps users reduce their environmental footprint')">🌱 Sustainability Platform</span>
+                    </div>
+                </div>
             </div>
 
             <div class="controls">
@@ -329,6 +422,14 @@
 
             <div id="status" class="status hidden"></div>
 
+            <div id="agentStatus" class="agent-status">
+                <div class="agent-status-header">
+                    <div class="agent-indicator"></div>
+                    <span class="agent-status-text" id="agentStatusText">Agent Working...</span>
+                </div>
+                <div class="agent-activity" id="agentActivity">Initializing multi-agent system...</div>
+            </div>
+
             <div id="workflowProgress" class="workflow-progress hidden">
                 <div class="progress-step" id="step-ideas">
                     <div class="step-circle">1</div>
@@ -355,6 +456,42 @@
     <script>
         let currentSession = null;
         let currentWorkflow = null;
+
+        function setPrompt(promptText) {
+            document.getElementById('ideaPrompt').value = promptText;
+            document.getElementById('ideaPrompt').focus();
+            
+            // Auto-select appropriate idea type based on prompt
+            const ideaTypeSelect = document.getElementById('ideaType');
+            if (promptText.includes('business') || promptText.includes('marketplace') || promptText.includes('platform')) {
+                ideaTypeSelect.value = 'business';
+            } else if (promptText.includes('app') || promptText.includes('tool') || promptText.includes('develop')) {
+                ideaTypeSelect.value = 'product';
+            } else {
+                ideaTypeSelect.value = 'creative';
+            }
+        }
+
+        function showAgentStatus(agentName, activity) {
+            const statusEl = document.getElementById('agentStatus');
+            const textEl = document.getElementById('agentStatusText');
+            const activityEl = document.getElementById('agentActivity');
+            
+            const agentEmojis = {
+                'orchestrator': '🎯',
+                'idea_coach': '💡',
+                'validator': '🔍',
+                'product_manager': '📋'
+            };
+            
+            textEl.textContent = `${agentEmojis[agentName] || '🤖'} ${agentName.replace('_', ' ').toUpperCase()} Agent`;
+            activityEl.textContent = activity;
+            statusEl.classList.add('active');
+        }
+
+        function hideAgentStatus() {
+            document.getElementById('agentStatus').classList.remove('active');
+        }
 
         async function startWorkflow() {
             const prompt = document.getElementById('ideaPrompt').value.trim();
@@ -385,11 +522,17 @@
                 showStatus(`Error: ${error.message}`, 'error');
             } finally {
                 document.getElementById('generateBtn').disabled = false;
+                hideAgentStatus();
             }
         }
 
         async function generateIdeasOnly(prompt, ideaType, numIdeas) {
             showProgress('ideas');
+            showAgentStatus('orchestrator', 'Coordinating idea generation workflow...');
+            
+            // Simulate brief orchestration delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            showAgentStatus('idea_coach', `Generating ${numIdeas} ${ideaType} ideas...`);
             
             const response = await fetch('/api/generate-ideas', {
                 method: 'POST',
@@ -404,6 +547,10 @@
             const result = await response.json();
             if (result.ideas) {
                 currentSession = result.session_id;
+                showAgentStatus('idea_coach', `Successfully generated ${result.ideas.length} ideas!`);
+                await new Promise(resolve => setTimeout(resolve, 800));
+                hideAgentStatus();
+                
                 displayIdeas(result.ideas);
                 showStatus('Ideas generated successfully!', 'success');
                 completeStep('ideas');
@@ -420,6 +567,7 @@
             // Step 2: Auto-validate top ideas
             showProgress('validation');
             showStatus('Validating generated ideas...', 'loading');
+            showAgentStatus('validator', 'Analyzing market viability and technical feasibility...');
             
             // Get ideas from the displayed cards
             const ideaCards = document.querySelectorAll('.idea-card');
@@ -448,12 +596,16 @@
             }
 
             if (validationResults.length > 0) {
+                showAgentStatus('validator', `Validation complete! Analyzed ${validationResults.length} ideas.`);
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
                 displayValidation(validationResults);
                 completeStep('validation');
                 
                 // Step 3: Create PRD for best idea
                 showProgress('prd');
                 showStatus('Creating Product Requirements Document...', 'loading');
+                showAgentStatus('product_manager', 'Creating comprehensive PRD with technical specs and timeline...');
                 
                 const bestIdea = validationResults.sort((a, b) => 
                     (b.validation.validation_results?.overall_score || 0) - 
@@ -472,6 +624,10 @@
 
                 const prdResult = await prdResponse.json();
                 if (prdResult.prd_document) {
+                    showAgentStatus('product_manager', 'PRD generation complete! All sections populated.');
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    hideAgentStatus();
+                    
                     displayPRD(prdResult.prd_document);
                     completeStep('prd');
                     showStatus('Full pipeline completed successfully!', 'success');
