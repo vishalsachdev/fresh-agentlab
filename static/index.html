@@ -364,29 +364,184 @@
             color: #6c757d;
             font-style: italic;
         }
+
+        .mode-toggle {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .mode-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .student-helper {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 100%);
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .student-helper.active {
+            display: block;
+        }
+
+        .student-helper h3 {
+            color: #155724;
+            margin: 0 0 15px 0;
+            font-size: 1.1rem;
+        }
+
+        .student-helper p {
+            color: #155724;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+        }
+
+        .learning-objectives {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .learning-objectives h4 {
+            color: #495057;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .learning-objectives ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #6c757d;
+        }
+
+        .learning-objectives li {
+            margin: 5px 0;
+        }
+
+        .simplified-labels .complex-term {
+            display: none;
+        }
+
+        .simplified-labels .simple-term {
+            display: inline;
+        }
+
+        .complex-term {
+            display: inline;
+        }
+
+        .simple-term {
+            display: none;
+        }
+
+        .student-mode .student-prompt {
+            display: inline-block;
+        }
+
+        .student-mode .professional-prompt {
+            display: none;
+        }
+
+        .professional-prompt {
+            display: inline-block;
+        }
+
+        .student-prompt {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🧠 AgentLab</h1>
-            <p>AI-Powered Multi-Agent Idea Generation & Validation Platform</p>
+            <p id="headerSubtitle">AI-Powered Multi-Agent Idea Generation & Validation Platform</p>
+            
+            <div class="mode-toggle">
+                <button id="studentModeBtn" class="mode-btn" onclick="toggleStudentMode()">
+                    🎓 Student Mode
+                </button>
+                <span class="mode-description" id="modeDescription">Perfect for tech strategy courses</span>
+            </div>
         </div>
 
         <div class="main-panel">
+            <div id="studentHelper" class="student-helper">
+                <h3>🎓 Welcome to Your First Ideation Session!</h3>
+                <p>Great apps start with great ideas. Today you'll learn how successful entrepreneurs validate their concepts before building anything.</p>
+                
+                <div class="learning-objectives">
+                    <h4>📚 What You'll Learn:</h4>
+                    <ul>
+                        <li>How to generate multiple solution ideas for real problems</li>
+                        <li>Why market research matters before building an app</li>
+                        <li>How to create a basic plan for your app project</li>
+                        <li>What makes some ideas more likely to succeed than others</li>
+                    </ul>
+                </div>
+                
+                <p><strong>💡 Pro Tip:</strong> The idea you develop here will become your app project in Bolt or Lovable next week!</p>
+            </div>
+
             <div class="input-section">
-                <label for="ideaPrompt">Describe your challenge or domain for idea generation:</label>
+                <label for="ideaPrompt">
+                    <span class="complex-term">Describe your challenge or domain for idea generation:</span>
+                    <span class="simple-term">What problem do you want to solve with an app?</span>
+                </label>
                 <textarea id="ideaPrompt" placeholder="Describe your challenge or click an example below..."></textarea>
                 
                 <div class="example-prompts">
-                    <label>💡 Try these examples:</label>
-                    <div class="prompt-tags">
-                        <span class="prompt-tag" onclick="setPrompt('Help students track assignments across different courses and manage deadlines effectively')">📚 Student Assignment Tracker</span>
-                        <span class="prompt-tag" onclick="setPrompt('Create a mobile app that helps people learn new languages through daily micro-lessons')">🌍 Language Learning App</span>
-                        <span class="prompt-tag" onclick="setPrompt('Build a platform that connects local businesses with freelance developers for small projects')">💼 Freelancer Marketplace</span>
-                        <span class="prompt-tag" onclick="setPrompt('Design a tool that helps remote teams collaborate more effectively on creative projects')">🤝 Remote Team Collaboration</span>
-                        <span class="prompt-tag" onclick="setPrompt('Develop a wellness app that tracks mental health and provides personalized recommendations')">🧘 Mental Health Tracker</span>
-                        <span class="prompt-tag" onclick="setPrompt('Create a sustainable living platform that helps users reduce their environmental footprint')">🌱 Sustainability Platform</span>
+                    <label>
+                        <span class="complex-term">💡 Try these examples:</span>
+                        <span class="simple-term">🎯 Student Project Ideas (click one):</span>
+                    </label>
+                    <div class="prompt-tags" id="promptTags">
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Help students track assignments across different courses and manage deadlines effectively')">📚 Assignment Tracker</span>
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Create a study buddy finder app that matches students based on their courses and study habits')">👥 Study Buddy Finder</span>
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Build a campus navigation app that helps students find classrooms, cafeterias, and study spaces')">🗺️ Campus Navigator</span>
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Design a textbook sharing platform where students can buy, sell, and rent used books from each other')">📖 Textbook Exchange</span>
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Develop a mental wellness app specifically designed for college students dealing with academic stress')">🧘 Student Wellness</span>
+                        <span class="prompt-tag student-prompt" onclick="setPrompt('Create a local food delivery app that connects students with affordable meal options near campus')">🍕 Campus Food Delivery</span>
+                        
+                        <!-- Professional examples (hidden by default in student mode) -->
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Create a mobile app that helps people learn new languages through daily micro-lessons')">🌍 Language Learning App</span>
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Build a platform that connects local businesses with freelance developers for small projects')">💼 Freelancer Marketplace</span>
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Design a tool that helps remote teams collaborate more effectively on creative projects')">🤝 Remote Team Collaboration</span>
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Develop a wellness app that tracks mental health and provides personalized recommendations')">🧘 Mental Health Tracker</span>
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Create a sustainable living platform that helps users reduce their environmental footprint')">🌱 Sustainability Platform</span>
+                        <span class="prompt-tag professional-prompt" onclick="setPrompt('Help students track assignments across different courses and manage deadlines effectively')">📚 Student Assignment Tracker</span>
                     </div>
                 </div>
             </div>
@@ -407,10 +562,19 @@
                 </div>
 
                 <div class="control-group">
-                    <label for="workflowType">Workflow:</label>
+                    <label for="workflowType">
+                        <span class="complex-term">Workflow:</span>
+                        <span class="simple-term">What do you want to create?</span>
+                    </label>
                     <select id="workflowType">
-                        <option value="full_pipeline">Full Pipeline (Ideas → Validation → PRD)</option>
-                        <option value="idea_generation">Ideas Only</option>
+                        <option value="full_pipeline">
+                            <span class="complex-term">Full Pipeline (Ideas → Validation → PRD)</span>
+                            <span class="simple-term">Complete App Plan (Recommended for Students)</span>
+                        </option>
+                        <option value="idea_generation">
+                            <span class="complex-term">Ideas Only</span>
+                            <span class="simple-term">Just Generate Ideas</span>
+                        </option>
                         <option value="validation_only">Validation Only</option>
                     </select>
                 </div>
@@ -456,6 +620,7 @@
     <script>
         let currentSession = null;
         let currentWorkflow = null;
+        let isStudentMode = false;
 
         function setPrompt(promptText) {
             document.getElementById('ideaPrompt').value = promptText;
@@ -491,6 +656,44 @@
 
         function hideAgentStatus() {
             document.getElementById('agentStatus').classList.remove('active');
+        }
+
+        function toggleStudentMode() {
+            isStudentMode = !isStudentMode;
+            const body = document.body;
+            const btn = document.getElementById('studentModeBtn');
+            const subtitle = document.getElementById('headerSubtitle');
+            const modeDesc = document.getElementById('modeDescription');
+            const helper = document.getElementById('studentHelper');
+            
+            if (isStudentMode) {
+                body.classList.add('student-mode');
+                body.classList.add('simplified-labels');
+                btn.classList.add('active');
+                btn.textContent = '👨‍💼 Professional Mode';
+                subtitle.textContent = 'Learn App Development Through Ideation & Validation';
+                modeDesc.textContent = 'Switch to professional mode';
+                helper.classList.add('active');
+                
+                // Set student-friendly defaults
+                document.getElementById('workflowType').value = 'full_pipeline';
+                document.getElementById('ideaType').value = 'product';
+                document.getElementById('numIdeas').value = '3';
+                
+            } else {
+                body.classList.remove('student-mode');
+                body.classList.remove('simplified-labels');
+                btn.classList.remove('active');
+                btn.textContent = '🎓 Student Mode';
+                subtitle.textContent = 'AI-Powered Multi-Agent Idea Generation & Validation Platform';
+                modeDesc.textContent = 'Perfect for tech strategy courses';
+                helper.classList.remove('active');
+                
+                // Reset to professional defaults
+                document.getElementById('workflowType').value = 'full_pipeline';
+                document.getElementById('ideaType').value = 'creative';
+                document.getElementById('numIdeas').value = '5';
+            }
         }
 
         async function startWorkflow() {
@@ -688,7 +891,10 @@
 
         function displayIdeas(ideas) {
             const container = document.getElementById('ideasContainer');
-            container.innerHTML = '<h2>💡 Generated Ideas</h2>';
+            const headerText = isStudentMode ? 
+                '<h2>💡 Your App Ideas</h2><p style="color: #6c757d; margin-bottom: 20px;">These are potential solutions to your problem. Pick the one that excites you most!</p>' : 
+                '<h2>💡 Generated Ideas</h2>';
+            container.innerHTML = headerText;
             
             const grid = document.createElement('div');
             grid.className = 'ideas-grid';
@@ -720,7 +926,10 @@
 
         function displayValidation(validationResults) {
             const container = document.getElementById('validationContainer');
-            container.innerHTML = '<h2>🔍 Validation Results</h2>';
+            const headerText = isStudentMode ? 
+                '<h2>🔍 Market Research Results</h2><p style="color: #6c757d; margin-bottom: 20px;">This shows how viable your app ideas are in the real world. Higher scores = better chances of success!</p>' : 
+                '<h2>🔍 Validation Results</h2>';
+            container.innerHTML = headerText;
             
             validationResults.forEach((result, index) => {
                 const panel = document.createElement('div');
@@ -751,7 +960,10 @@
 
         function displayPRD(prdDocument) {
             const container = document.getElementById('prdContainer');
-            container.innerHTML = '<h2>📋 Product Requirements Document</h2>';
+            const headerText = isStudentMode ? 
+                '<h2>📋 Your App Development Plan</h2><p style="color: #6c757d; margin-bottom: 20px;">This is your blueprint for building the app! Use this plan when you start coding in Bolt or Lovable.</p>' : 
+                '<h2>📋 Product Requirements Document</h2>';
+            container.innerHTML = headerText;
             
             const panel = document.createElement('div');
             panel.className = 'prd-panel';
