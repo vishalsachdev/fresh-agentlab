@@ -2,6 +2,12 @@
 
 Multi-Agent AI-Powered Idea Generation & Validation Platform built using the claude-flow approach without ADK framework dependencies.
 
+## 🎬 Demo
+
+[![FreshAgentLab Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
+*Click to watch the full demo - See multi-agent idea generation in action!*
+
 ## Features
 
 - 🎯 **Multi-Agent Architecture**: IdeaCoach, Validation, ProductManager, and Orchestrator agents
